@@ -102,35 +102,35 @@ RFduino from a PC or Mac.
 		app.setLed(
 			{'color': 'yellow', "pattern": 'blink', "event": 'on', "duration": 0}, 
 			function(){ console.log("f1 completed :)")}, 
-			function(errorCode){console.log('fail: ' + str(errorCode))}
+			function(errorCode){console.log('fail: ' + errorCode)}
 		)
 	}
 	var f2 = function(){
 		app.setLed(
 			{'color': 'blue', "pattern": 'steady', "event": 'on', "duration": 0}, 
 			function(){ console.log("f2 completed :)")}, 
-			function(errorCode){console.log('fail: ' + str(errorCode))}
+			function(errorCode){console.log('fail: ' + errorCode)}
 		)
 	}
 	var f3 = function(){
 		app.setLed(
 			{'color': 'green', "pattern": 'flash', "event": 'on', "duration": 5}, 
 			function(){ console.log("f3 completed :)")}, 
-			function(errorCode){console.log('fail: ' + str(errorCode))}
+			function(errorCode){console.log('fail: ' + errorCode)}
 		)
 	}
 	var f4 = function(){
 		app.setLed(
 			{'color': 'blue', "pattern": 'steady', "event": 'on', "duration": 4}, 
 			function(){ console.log("f4 completed :)")}, 
-			function(errorCode){console.log('fail: ' + str(errorCode))}
+			function(errorCode){console.log('fail: ' + errorCode)}
 		)
 	}
 	var f5 = function(){
 		app.setLed(
 			{'color': 'black', "pattern": 'steady', "event": 'off', "duration": 0}, 
 			function(){ console.log("f5 completed :)")}, 
-			function(errorCode){console.log('fail: ' + str(errorCode))}
+			function(errorCode){console.log('fail: ' + errorCode)}
 		)
 	}
 
@@ -143,14 +143,13 @@ RFduino from a PC or Mac.
 	// Connected device.
 	app.device = null;
 
-	// Turn on LED.
-	app.ledOn = function()
-	{
-		app.device && app.device.writeDataArray(new Uint8Array([1]));
-	};
-
 	app.setLed = function(options, success, fail)
 	{
+		if (!app.device) {
+			fail && fail('not connected');
+			return;
+		}
+
 	    var color = options['color'] || 'white'; // white, red, green, blue, [int, int, int]
 	    var pattern = options['pattern'] || 'blink'; // blink, flash
 	    var the_event = options['event'] || 'on'; // on, off
@@ -200,19 +199,12 @@ RFduino from a PC or Mac.
 	            fail && fail(errorCode)
 			};
 
-	        // TODO: This method must be replaced with one that accepts JSON data
-			// app.device.writeDataToScratch(1, data, onDataWriteSuccess, onDataWriteFailure);
+			app.device.writeJsonData(data, onDataWriteSuccess, onDataWriteFailure);
 		}
 		else
 		{
 	        fail && fail('Component not connected')
 		}
-	};
-
-	// Turn off LED.
-	app.ledOff = function()
-	{
-		app.device && app.device.writeDataArray(new Uint8Array([0]));
 	};
 
 	app.showMessage = function(info)

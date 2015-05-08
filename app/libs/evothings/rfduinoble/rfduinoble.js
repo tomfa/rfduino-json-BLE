@@ -88,24 +88,25 @@ evothings.rfduinoble = {};
 				});
 		};
 
-		device.writeJsonData = function(jsonData)
+		device.writeJsonData = function(jsonData, success, fail)
 		{
-			/*
+			var JSONToArrayBuffer = function(json) {
+				var str = JSON.stringify(json, null, 0);
+				var ret = new Uint8Array(str.length);
+				for (var i = 0; i < str.length; i++) {
+					ret[i] = str.charCodeAt(i);
+				}
+				return ret
+			};
+
+			var data = JSONToArrayBuffer(jsonData);
+
 			device.writeCharacteristic(
-				"00002222-0000-1000-8000-00805f9b34fb", // This is probably wrong
-				jsonData,
-				function()
-				{
-					console.log("writeCharacteristic success");
-				},
-				function(errorCode)
-				{
-					console.log("writeCharacteristic error: " + errorCode);
-				})
+				"00002222-0000-1000-8000-00805f9b34fb",
+				data,
+				success,
+				fail
 			)
-			*/
-			console.log("Attempted to send the follow JSON-data:");
-			console.log(jsonData);
 		}
 	};
 
