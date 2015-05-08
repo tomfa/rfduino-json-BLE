@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+<!--
+This is an example app that demonstrates how to control an
+RFduino RFD22102 board using BLE (Bluetooth Low Energy).
+
+Please note that this example requires an RFduino RFD22102 plus
+and RFduino RGB LED Button shield (RFD22122). In addition, an
+RFduino USB shield (RFD22121) is needed for programming the
+RFduino from a PC or Mac.
+-->
+<head>
+
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, user-scalable=no
+		initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0" />
+
+	<title>RFduino LED On/Off</title>
+
+	<style>
+		@import 'ui/css/evothings-app.css';
+	</style>
+
+	<style>
+	div {
+		margin: 10px 0px;
+	}
+	button {
+		margin: 5px 0px;
+	}
+	.lead {
+		font-weight: bold;
+	}
+	</style>
+
+	<script>
+	// Redirect console.log to Evothings Workbench.
+	if (window.hyper && window.hyper.log) { console.log = hyper.log }
+	</script>
+
+	<script src="cordova.js"></script>
+	<script src="libs/jquery/jquery.js"></script>
+	<script src="libs/evothings/evothings.js"></script>
+	<script src="libs/evothings/rfduinoble/rfduinoble.js"></script>
+
+</head>
+
+<body>
+
+	<header>
+		<button class="back" onclick="history.back()">
+			<img src="ui/images/arrow-left.svg" />
+		</button>
+
+		<img class="logotype" src="ui/images/logo.svg" alt="Evothings" />
+
+		<!--<button class="menu" onclick=""><img src="ui/images/menu.svg" /></button>-->
+	</header>
+
+	<h1>RFduino LED On/Off</h1>
+
+	<p id="info" class="lead">Initializing...</p>
+
+	<button type="button" class="yellow" onclick="f1()">
+		Yellow Blink
+	</button>
+	<br />
+
+	<button type="button" class="blue" onclick="f2()">
+		Blue Steady
+	</button>
+	<br />
+
+	<button type="button" class="green" onclick="f3()">
+		Green Flash 5 sec
+	</button> 
+	<br />
+
+	<button type="button" class="red" onclick="f4()">
+		Red Steady 5sec
+	</button>
+	<br />
+
+	<button type="button" class="black" onclick="f4()">
+		Off
+	</button>
+	<br />
+	
+	<h2>Instructions</h2>
+	<p>This example requires a RFduino RFD22102 and an RFduino RGB
+	LED Button shield (RFD22122). You also need an RFduino USB shield
+	for programming the RFduino from a PC/Mac.</p>
+
+	<!-- TODO: Image is missing.
+	<p><img src="RFduino_Image.png" style="max-height:30%;" /></p>
+	-->
+
+	<!-- JavaScript code for the app -->
+
+	<script>
+	var f1 = function(){
+		app.setLed(
+			{'color': 'yellow', "pattern": 'blink', "event": 'on', "duration": 0}, 
+			function(){ console.log("f1 completed :)")}, 
+			function(errorCode){console.log('fail: ' + str(errorCode))}
+		)
+	}
+	var f2 = function(){
+		app.setLed(
+			{'color': 'blue', "pattern": 'steady', "event": 'on', "duration": 0}, 
+			function(){ console.log("f2 completed :)")}, 
+			function(errorCode){console.log('fail: ' + str(errorCode))}
+		)
+	}
+	var f3 = function(){
+		app.setLed(
+			{'color': 'green', "pattern": 'flash', "event": 'on', "duration": 5}, 
+			function(){ console.log("f3 completed :)")}, 
+			function(errorCode){console.log('fail: ' + str(errorCode))}
+		)
+	}
+	var f4 = function(){
+		app.setLed(
+			{'color': 'blue', "pattern": 'steady', "event": 'on', "duration": 4}, 
+			function(){ console.log("f4 completed :)")}, 
+			function(errorCode){console.log('fail: ' + str(errorCode))}
+		)
+	}
+	var f5 = function(){
+		app.setLed(
+			{'color': 'black', "pattern": 'steady', "event": 'off', "duration": 0}, 
+			function(){ console.log("f5 completed :)")}, 
+			function(errorCode){console.log('fail: ' + str(errorCode))}
+		)
+	}
+
+	// Short name for RFduino BLE library.
+	var rfduinoble = evothings.rfduinoble;
+
+	// Application object.
+	var app = {};
+
+	// Connected device.
+	app.device = null;
+
+	// Turn on LED.
+	app.ledOn = function()
+	{
+		app.device && app.device.writeDataArray(new Uint8Array([1]));
+	};
+
+	app.setLed = function(options, success, fail)
+	{
+	    var color = options['color'] || 'white'; // white, red, green, blue, [int, int, int]
+	    var pattern = options['pattern'] || 'blink'; // blink, flash
+	    var the_event = options['event'] || 'on'; // on, off
+	    var duration = options['duration'] || 0; //
+
+	    // Validation
+	    var validColorValue = function(color) {
+	        return (typeof(color) === "string") || (typeof(color) === "object" && color.length === 3);
+	    };
+	    var validPattern = function(pattern) {
+	        return typeof(pattern) === "string" && (pattern === 'blink' || pattern == 'flash');
+	    };
+	    var validDuration = function(duration) {
+	        return typeof(duration) === "number" && duration >= 0;
+	    };
+	    var validEvent = function(event) {
+	        return typeof(the_event) === "string" && (the_event === 'off' || the_event === 'on');
+	    };
+
+	    if (app.device)
+		{
+			if (!(validColorValue(color) && validPattern(pattern) && validDuration(duration) && validEvent(the_event))) {
+	            fail && fail('invalid input')
+	            return;
+	        }
+
+	        data = {
+	            "device": 'LED',
+	            "color": color,
+	            "pattern": pattern,
+	            "event": the_event,
+	            "duration": duration
+	        }
+
+			// Callbacks
+			function onDataWriteSuccess()
+			{
+				console.log('Succeeded to write data.');
+	            success && success()
+	            driver.eventhandler.trigger('LED_CHANGE')
+			}
+
+			function onDataWriteFailure(errorCode)
+			{
+				console.log('Failed to write data with error: ' + errorCode);
+				driver.disconnect();
+	            fail && fail(errorCode)
+			};
+
+	        // TODO: This method must be replaced with one that accepts JSON data
+			// app.device.writeDataToScratch(1, data, onDataWriteSuccess, onDataWriteFailure);
+		}
+		else
+		{
+	        fail && fail('Component not connected')
+		}
+	};
+
+	// Turn off LED.
+	app.ledOff = function()
+	{
+		app.device && app.device.writeDataArray(new Uint8Array([0]));
+	};
+
+	app.showMessage = function(info)
+	{
+		document.getElementById("info").innerHTML = info;
+	};
+
+	// Called when BLE and other native functions are available.
+	app.onDeviceReady = function()
+	{
+		app.showMessage('Press the yellow button to connect');
+	};
+
+	app.connect = function()
+	{
+		console.log("close");
+		rfduinoble.close();
+
+		// Wait 500 ms for close to complete before connecting.
+		setTimeout(function()
+		{
+			console.log("connecting");
+			app.showMessage("Connecting...");
+			rfduinoble.connect(
+				"RFduino",
+				function(device)
+				{
+					console.log("connected");
+					app.showMessage("Connected");
+					app.device = device;
+				},
+				function(errorCode)
+				{
+					app.showMessage("Connect error: " + errorCode);
+				});
+			},
+			500);
+	};
+
+	// When the app is fully loaded the "deviceready" event is triggered.
+	document.addEventListener("deviceready", app.onDeviceReady, false);
+	</script>
+</body>
+</html>
